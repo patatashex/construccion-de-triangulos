@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geometría Interactiva: Triángulos</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- MathJax CDN para fórmulas matemáticas elegantes -->
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
+
+  <!-- Header -->
+  <header class="bg-indigo-600 text-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-indigo-500 rounded-lg">
+          <i data-lucide="triangle" class="w-8 h-8 text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold leading-tight">Laboratorio de Triángulos</h1>
+          <p class="text-indigo-200 text-sm">Explora, construye y aprende geometría interactiva</p>
+        </div>
+      </div>
+      <nav class="flex flex-wrap gap-2">
+        <button id="nav-canvas" class="nav-btn px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 bg-indigo-700 text-white shadow-inner">
+          <i data-lucide="move" class="w-4 h-4"></i> Explorador Libre
+        </button>
+        <button id="nav-challenges" class="nav-btn px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 bg-indigo-500/50 hover:bg-indigo-500 text-indigo-100 hover:text-white">
+          <i data-lucide="trophy" class="w-4 h-4"></i> Desafíos de Construcción
+        </button>
+        <button id="nav-theory" class="nav-btn px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 bg-indigo-500/50 hover:bg-indigo-500 text-indigo-100 hover:text-white">
+          <i data-lucide="book-open" class="w-4 h-4"></i> Teoría y Quizzes
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
+
+    <!-- SECCIÓN 1: LIENZO INTERACTIVO (EXPLORADOR) -->
+    <section id="section-canvas" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Canvas Area (2 Columns on large screens) -->
+      <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-semibold text-slate-700 flex items-center gap-2">
+            <i data-lucide="mouse-pointer" class="w-5 h-5 text-indigo-600"></i>
+            Arrastra los vértices (A, B, C)
+          </h2>
+          <div class="flex gap-2">
+            <button id="btn-grid-toggle" class="p-2 text-slate-600 hover:bg-slate-100 rounded-lg text-xs font-medium border flex items-center gap-1">
+              <i data-lucide="grid" class="w-4 h-4"></i> Cuadrícula
+            </button>
+            <button id="btn-reset-points" class="p-2 text-slate-600 hover:bg-slate-100 rounded-lg text-xs font-medium border flex items-center gap-1">
+              <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reiniciar
+            </button>
+          </div>
+        </div>
+
+        <div class="relative w-full aspect-[4/3] sm:aspect-[16/10] bg-slate-900 rounded-xl overflow-hidden shadow-inner flex items-center justify-center">
+          <canvas id="triangleCanvas" class="w-full h-full cursor-crosshair touch-none"></canvas>
+          <div class="absolute bottom-3 left-3 bg-slate-800/80 backdrop-blur-sm px-3 py-1.5 rounded-lg text-xs text-slate-300 pointer-events-none">
+            📍 Usa el ratón o el dedo sobre los puntos A, B o C
+          </div>
+        </div>
+
+        <!-- Classifications Badges -->
+        <div class="mt-4 grid grid-cols-2 gap-3">
+          <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-between">
+            <span class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Por Lados</span>
+            <span id="badge-side-type" class="text-base font-bold text-indigo-900">Escaleno</span>
+          </div>
+          <div class="p-3 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-between">
+            <span class="text-xs font-semibold text-purple-600 uppercase tracking-wider">Por Ángulos</span>
+            <span id="badge-angle-type" class="text-base font-bold text-purple-900">Acutángulo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Stats & Measurements Sidebar -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
+        <div>
+          <h3 class="text-base font-bold text-slate-800 pb-3 border-b border-slate-100 flex items-center gap-2">
+            <i data-lucide="ruler" class="w-5 h-5 text-indigo-600"></i> Medidas en Tiempo Real
+          </h3>
+
+          <!-- Lados -->
+          <div class="mt-4">
+            <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Longitud de Lados (cm)</h4>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+                <span class="text-sm font-medium flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span> Lado c (AB):
+                </span>
+                <span id="val-side-c" class="font-mono font-bold text-slate-700">0.00</span>
+              </div>
+              <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+                <span class="text-sm font-medium flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full bg-blue-500 inline-block"></span> Lado a (BC):
+                </span>
+                <span id="val-side-a" class="font-mono font-bold text-slate-700">0.00</span>
+              </div>
+              <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+                <span class="text-sm font-medium flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Lado b (CA):
+                </span>
+                <span id="val-side-b" class="font-mono font-bold text-slate-700">0.00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ángulos -->
+          <div class="mt-5">
+            <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Ángulos Interiores (°)</h4>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="p-2 rounded-lg bg-slate-50 border border-slate-100 text-center">
+                <span class="text-xs text-slate-500 block">Ángulo A</span>
+                <span id="val-angle-a" class="font-mono font-bold text-indigo-600 text-base">0°</span>
+              </div>
+              <div class="p-2 rounded-lg bg-slate-50 border border-slate-100 text-center">
+                <span class="text-xs text-slate-500 block">Ángulo B</span>
+                <span id="val-angle-b" class="font-mono font-bold text-indigo-600 text-base">0°</span>
+              </div>
+              <div class="p-2 rounded-lg bg-slate-50 border border-slate-100 text-center">
+                <span class="text-xs text-slate-500 block">Ángulo C</span>
+                <span id="val-angle-c" class="font-mono font-bold text-indigo-600 text-base">0°</span>
+              </div>
+            </div>
+            <div class="mt-2 text-right">
+              <span class="text-xs text-slate-400">Suma total: </span>
+              <span id="val-angle-sum" class="text-xs font-mono font-bold text-slate-600">180°</span>
+            </div>
+          </div>
+
+          <!-- Perímetro y Área -->
+          <div class="mt-5 pt-4 border-t border-slate-100 grid grid-cols-2 gap-3">
+            <div>
+              <span class="text-xs text-slate-400 block">Perímetro</span>
+              <span id="val-perimeter" class="text-lg font-bold text-slate-800 font-mono">0.00 cm</span>
+            </div>
+            <div>
+              <span class="text-xs text-slate-400 block">Área aproximada</span>
+              <span id="val-area" class="text-lg font-bold text-slate-800 font-mono">0.00 cm²</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-xs text-amber-800">
+          <i data-lucide="lightbulb" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+          <span><strong>Propiedad fundamental:</strong> La suma de los tres ángulos internos de cualquier triángulo plano siempre es exactamente 180°.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 2: DESAFÍOS DE CONSTRUCCIÓN -->
+    <section id="section-challenges" class="hidden grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Challenge Description & Task List -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wider">
+              Desafío <span id="challenge-num">1</span> de 5
+            </span>
+            <div class="flex items-center gap-1 text-amber-500 font-bold text-sm">
+              <i data-lucide="star" class="w-4 h-4 fill-amber-400"></i>
+              <span id="challenge-score">0 / 5</span>
+            </div>
+          </div>
+
+          <h3 id="challenge-title" class="text-xl font-bold text-slate-800 mb-2">Construye un Triángulo Rectángulo</h3>
+          <p id="challenge-desc" class="text-slate-600 text-sm mb-6 leading-relaxed">
+            Mueve los vértices en la pantalla para lograr que uno de los ángulos interiores mida exactamente 90° (un ángulo recto).
+          </p>
+
+          <!-- Objetivos / Condiciones -->
+          <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 mb-6">
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Requisitos de verificación:</h4>
+            <div id="challenge-requirements" class="space-y-2">
+              <!-- Requisitos renderizados dinámicamente -->
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div id="challenge-feedback" class="hidden p-3 rounded-xl mb-4 text-sm font-medium flex items-center gap-2"></div>
+          
+          <div class="flex gap-2">
+            <button id="btn-check-challenge" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition flex items-center justify-center gap-2">
+              <i data-lucide="check-circle" class="w-5 h-5"></i> Verificar Triángulo
+            </button>
+            <button id="btn-next-challenge" class="hidden flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-200 transition items-center justify-center gap-2">
+              Siguiente <i data-lucide="arrow-right" class="w-5 h-5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Canvas for Challenges -->
+      <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col">
+        <div class="relative w-full aspect-[4/3] sm:aspect-[16/10] bg-slate-900 rounded-xl overflow-hidden shadow-inner flex items-center justify-center">
+          <canvas id="challengeCanvas" class="w-full h-full cursor-crosshair touch-none"></canvas>
+        </div>
+        <div class="mt-4 flex justify-between items-center px-2 text-xs text-slate-500">
+          <span>Pistas: Mueve $A$, $B$ o $C$ suavemente. Tolera pequeñas diferencias de medición.</span>
+          <button id="btn-challenge-hint" class="text-indigo-600 font-semibold hover:underline flex items-center gap-1">
+            <i data-lucide="help-circle" class="w-4 h-4"></i> ¿Necesitas una pista?
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 3: TEORÍA Y MINI-QUIZZES -->
+    <section id="section-theory" class="hidden space-y-8">
+      
+      <!-- Introducción Teórica con tarjetas interactivas -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+        <h2 class="text-2xl font-bold text-slate-800 mb-2 flex items-center gap-2">
+          <i data-lucide="book-open" class="w-7 h-7 text-indigo-600"></i>
+          Clasificación de los Triángulos
+        </h2>
+        <p class="text-slate-600 text-sm md:text-base max-w-3xl mb-8">
+          Un triángulo es un polígono de tres lados y tres ángulos. Se pueden clasificar según la longitud de sus **lados** o según la amplitud de sus **ángulos**.
+        </p>
+
+        <!-- Pestañas de la Teoría -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          
+          <!-- Clasificación según sus Lados -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-bold text-indigo-900 flex items-center gap-2 pb-2 border-b border-indigo-100">
+              <i data-lucide="ruler" class="w-5 h-5 text-indigo-600"></i>
+              1. Según la medida de sus LADOS
+            </h3>
+
+            <!-- Equilátero -->
+            <div class="p-4 rounded-xl border border-slate-200 hover:border-indigo-300 transition bg-slate-50/50">
+              <div class="flex justify-between items-start mb-2">
+                <h4 class="font-bold text-slate-800">Triángulo Equilátero</h4>
+                <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-semibold">3 Lados iguales</span>
+              </div>
+              <p class="text-xs text-slate-600 mb-3">
+                Sus 3 lados miden exactamente lo mismo ($a = b = c$). Además, sus 3 ángulos internos también son iguales (cada uno de $60^\circ$).
+              </p>
+              <button onclick="loadPreset('equilateral')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                <i data-lucide="eye" class="w-3.5 h-3.5"></i> Probar en el lienzo libre
+              </button>
+            </div>
+
+            <!-- Isósceles -->
+            <div class="p-4 rounded-xl border border-slate-200 hover:border-indigo-300 transition bg-slate-50/50">
+              <div class="flex justify-between items-start mb-2">
+                <h4 class="font-bold text-slate-800">Triángulo Isósceles</h4>
+                <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-semibold">2 Lados iguales</span>
+              </div>
+              <p class="text-xs text-slate-600 mb-3">
+                Tiene 2 lados de igual longitud y 1 lado diferente. Los ángulos opuestos a los lados iguales también son idénticos entre sí.
+              </p>
+              <button onclick="loadPreset('isosceles')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                <i data-lucide="eye" class="w-3.5 h-3.5"></i> Probar en el lienzo libre
+              </button>
+            </div>
+
+            <!-- Escaleno -->
+            <div class="p-4 rounded-xl border border-slate-200 hover:border-indigo-300 transition bg-slate-50/50">
+              <div class="flex justify-between items-start mb-2">
+                <h4 class="font-bold text-slate-800">Triángulo Escaleno</h4>
+                <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-semibold">0 Lados iguales</span>
+              </div>
+              <p class="text-xs text-slate-600 mb-3">
+                Todos sus lados tienen longitudes distintas ($a \neq b \neq c$). Sus 3 ángulos interiores también son completamente diferentes.
+              </p>
+              <button onclick="loadPreset('scalene')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                <i data-lucide="eye" class="w-3.5 h-3.5"></i> Probar en el lienzo libre
+              </button>
+            </div>
+          </div>
+
+          <!-- Clasificación según sus Ángulos -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-bold text-purple-900 flex items-center gap-2 pb-2 border-b border-purple-100">
+              <i data-lucide="compass" class="w-5 h-5 text-purple-600"></i>
+              2. Según la medida de sus ÁNGULOS
+            </h3>
+
+            <!-- Acutángulo -->
+            <div class="p-4 rounded-xl border border-slate-200 hover:border-purple-300 transition bg-slate-50/50">
+              <div class="flex justify-between items-start mb-2">
+                <h4 class="font-bold text-slate-800">Triángulo Acutángulo</h4>
+                <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-semibold">Ángulos &lt; 90°</span>
+              </div>
+              <p class="text-xs text-slate-600 mb-3">
+                Sus 3 ángulos interiores son agudos, es decir, miden estrictamente menos de $90^\circ$.
+              </p>
+              <button onclick="loadPreset('acute')" class="text-xs font-semibold text-purple-600 hover:text-purple-800 flex items-center gap-1">
+                <i data-lucide="eye" class="w-3.5 h-3.5"></i> Probar en el lienzo libre
+              </button>
+            </div>
+
+            <!-- Rectángulo -->
+            <div class="p-4 rounded-xl border border-slate-200 hover:border-purple-300 transition bg-slate-50/50">
+              <div class="flex justify-between items-start mb-2">
+                <h4 class="font-bold text-slate-800">Triángulo Rectángulo</h4>
+                <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-semibold">1 Ángulo = 90°</span>
+              </div>
+              <p class="text-xs text-slate-600 mb-3">
+                Posee exactamente un ángulo recto ($90^\circ$). El lado opuesto al ángulo recto se llama **hipotenusa** y los otros dos **catetos**.
+              </p>
+              <button onclick="loadPreset('right')" class="text-xs font-semibold text-purple-600 hover:text-purple-800 flex items-center gap-1">
+                <i data-lucide="eye" class="w-3.5 h-3.5"></i> Probar en el lienzo libre
+              </button>
+            </div>
+
+            <!-- Obtusángulo -->
+            <div class="p-4 rounded-xl border border-slate-200 hover:border-purple-300 transition bg-slate-50/50">
+              <div class="flex justify-between items-start mb-2">
+                <h4 class="font-bold text-slate-800">Triángulo Obtusángulo</h4>
+                <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-semibold">1 Ángulo &gt; 90°</span>
+              </div>
+              <p class="text-xs text-slate-600 mb-3">
+                Tiene un ángulo obtuso, es decir, uno de sus ángulos interiores mide más de $90^\circ$ (y menos de $180^\circ$).
+              </p>
+              <button onclick="loadPreset('obtuse')" class="text-xs font-semibold text-purple-600 hover:text-purple-800 flex items-center gap-1">
+                <i data-lucide="eye" class="w-3.5 h-3.5"></i> Probar en el lienzo libre
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini-Quiz Interactivo -->
+      <div class="bg-indigo-900 text-white rounded-2xl shadow-lg p-6 md:p-8">
+        <div class="max-w-3xl mx-auto">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="p-2 bg-indigo-700/80 rounded-xl">
+              <i data-lucide="help-circle" class="w-6 h-6 text-amber-300"></i>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold">Comprueba tus Conocimientos</h3>
+              <p class="text-indigo-200 text-xs md:text-sm">Pequeña autoevaluación rápida con retroalimentación inmediata</p>
+            </div>
+          </div>
+
+          <!-- Quiz Question Card -->
+          <div id="quiz-container" class="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/10">
+            <div class="flex justify-between items-center mb-4">
+              <span id="quiz-step" class="text-xs font-bold uppercase tracking-wider text-indigo-300">Pregunta 1 de 4</span>
+              <span id="quiz-score-badge" class="text-xs bg-indigo-800 px-2.5 py-1 rounded-full text-indigo-200">Puntaje: 0</span>
+            </div>
+
+            <h4 id="quiz-question" class="text-lg font-medium mb-6">
+              ¿Cómo se llama el triángulo que tiene sus 3 lados con la misma medida?
+            </h4>
+
+            <div id="quiz-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+              <!-- Opciones del quiz -->
+            </div>
+
+            <div id="quiz-explanation" class="hidden p-4 rounded-lg bg-indigo-950/80 border border-indigo-700/50 text-sm text-indigo-100 mb-4">
+              <!-- Explicación de respuesta -->
+            </div>
+
+            <button id="btn-quiz-next" class="hidden w-full py-3 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold rounded-xl transition items-center justify-center gap-2">
+              Siguiente Pregunta <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 mt-12 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4">
+      <p>Laboratorio Educativo Interactivo de Geometría • Construido con Canvas y Tailwind CSS</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPT LÓGICO PRINCIPAL -->
+  <script>
+    // inicializar Lucide Icons
+    lucide.createIcons();
+
+    // ==========================================
+    // ESTADO Y NAVEGACIÓN DE SECCIONES
+    // ==========================================
+    const sections = {
+      canvas: document.getElementById('section-canvas'),
+      challenges: document.getElementById('section-challenges'),
+      theory: document.getElementById('section-theory')
+    };
+
+    const navButtons = {
+      canvas: document.getElementById('nav-canvas'),
+      challenges: document.getElementById('nav-challenges'),
+      theory: document.getElementById('nav-theory')
+    };
+
+    function switchSection(target) {
+      Object.keys(sections).forEach(key => {
+        if (key === target) {
+          sections[key].classList.remove('hidden');
+          if (key === 'canvas' || key === 'challenges') sections[key].classList.add('grid');
+          navButtons[key].className = "nav-btn px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 bg-indigo-700 text-white shadow-inner";
+        } else {
+          sections[key].classList.add('hidden');
+          sections[key].classList.remove('grid');
+          navButtons[key].className = "nav-btn px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 bg-indigo-500/50 hover:bg-indigo-500 text-indigo-100 hover:text-white";
+        }
+      });
+
+      if (target === 'canvas') resizeCanvas(freeCanvas, freeCtx, freePoints);
+      if (target === 'challenges') resizeCanvas(challengeCanvas, challengeCtx, challengePoints);
+    }
+
+    navButtons.canvas.addEventListener('click', () => switchSection('canvas'));
+    navButtons.challenges.addEventListener('click', () => switchSection('challenges'));
+    navButtons.theory.addEventListener('click', () => switchSection('theory'));
+
+    // ==========================================
+    // LÓGICA DE CANVAS E INTERACCIÓN MATEMÁTICA
+    // ==========================================
+    
+    // Canvas Libre
+    const freeCanvas = document.getElementById('triangleCanvas');
+    const freeCtx = freeCanvas.getContext('2d');
+
+    // Canvas de Desafíos
+    const challengeCanvas = document.getElementById('challengeCanvas');
+    const challengeCtx = challengeCanvas.getContext('2d');
+
+    let showGrid = true;
+
+    // Puntos por defecto (en porcentaje relativo 0-1)
+    let freePoints = [
+      { x: 0.3, y: 0.7, label: 'A' },
+      { x: 0.7, y: 0.7, label: 'B' },
+      { x: 0.4, y: 0.25, label: 'C' }
+    ];
+
+    let challengePoints = [
+      { x: 0.25, y: 0.7, label: 'A' },
+      { x: 0.75, y: 0.7, label: 'B' },
+      { x: 0.5, y: 0.3, label: 'C' }
+    ];
+
+    function resizeCanvas(canvas, ctx, points) {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      drawTriangle(canvas, ctx, points);
+    }
+
+    // Cálculos Geométricos
+    function getDistance(p1, p2, width, height) {
+      const dx = (p1.x - p2.x) * width;
+      const dy = (p1.y - p2.y) * height;
+      // Escala visual a cm aproximados
+      return Math.sqrt(dx * dx + dy * dy) / 35; 
+    }
+
+    function calculateTriangleData(points, width, height) {
+      const c = getDistance(points[0], points[1], width, height); // AB
+      const a = getDistance(points[1], points[2], width, height); // BC
+      const b = getDistance(points[2], points[0], width, height); // CA
+
+      // Ley de cosenos para ángulos
+      let angleA = Math.acos((b * b + c * c - a * a) / (2 * b * c)) * (180 / Math.PI);
+      let angleB = Math.acos((a * a + c * c - b * b) / (2 * a * c)) * (180 / Math.PI);
+      let angleC = Math.acos((a * a + b * b - c * c) / (2 * a * b)) * (180 / Math.PI);
+
+      if (isNaN(angleA)) angleA = 0;
+      if (isNaN(angleB)) angleB = 0;
+      if (isNaN(angleC)) angleC = 0;
+
+      // Perímetro y Área (Fórmula de Herón)
+      const perimeter = a + b + c;
+      const s = perimeter / 2;
+      const area = Math.sqrt(Math.max(0, s * (s - a) * (s - b) * (s - c)));
+
+      // Clasificación por Lados
+      const tolSide = 0.25; // Tolerancia de similitud
+      let sideType = "Escaleno";
+      const eqAB = Math.abs(a - b) < tolSide;
+      const eqBC = Math.abs(b - c) < tolSide;
+      const eqCA = Math.abs(c - a) < tolSide;
+
+      if (eqAB && eqBC && eqCA) {
+        sideType = "Equilátero";
+      } else if (eqAB || eqBC || eqCA) {
+        sideType = "Isósceles";
+      }
+
+      // Clasificación por Ángulos
+      const tolAngle = 3;
+      let angleType = "Acutángulo";
+      if (Math.abs(angleA - 90) < tolAngle || Math.abs(angleB - 90) < tolAngle || Math.abs(angleC - 90) < tolAngle) {
+        angleType = "Rectángulo";
+      } else if (angleA > 90 + tolAngle || angleB > 90 + tolAngle || angleC > 90 + tolAngle) {
+        angleType = "Obtusángulo";
+      }
+
+      return { sideA: a, sideB: b, sideC: c, angleA, angleB, angleC, perimeter, area, sideType, angleType };
+    }
+
+    function drawTriangle(canvas, ctx, points) {
+      const w = canvas.width / window.devicePixelRatio;
+      const h = canvas.height / window.devicePixelRatio;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Dibujar Rejilla de Fondo
+      if (showGrid) {
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 1;
+        const gridSize = 30;
+        for (let x = 0; x < w; x += gridSize) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, h);
+          ctx.stroke();
+        }
+        for (let y = 0; y < h; y += gridSize) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
+        }
+      }
+
+      // Convertir coords relativas a absolutas
+      const abs = points.map(p => ({ x: p.x * w, y: p.y * h, label: p.label }));
+
+      // Dibujar Relleno del Triángulo
+      ctx.beginPath();
+      ctx.moveTo(abs[0].x, abs[0].y);
+      ctx.lineTo(abs[1].x, abs[1].y);
+      ctx.lineTo(abs[2].x, abs[2].y);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(99, 102, 241, 0.15)';
+      ctx.fill();
+
+      // Dibujar Bordes
+      ctx.lineWidth = 3;
+      
+      // Lado AB (c) - Rojo
+      ctx.strokeStyle = '#ef4444';
+      ctx.beginPath(); ctx.moveTo(abs[0].x, abs[0].y); ctx.lineTo(abs[1].x, abs[1].y); ctx.stroke();
+
+      // Lado BC (a) - Azul
+      ctx.strokeStyle = '#3b82f6';
+      ctx.beginPath(); ctx.moveTo(abs[1].x, abs[1].y); ctx.lineTo(abs[2].x, abs[2].y); ctx.stroke();
+
+      // Lado CA (b) - Verde
+      ctx.strokeStyle = '#10b981';
+      ctx.beginPath(); ctx.moveTo(abs[2].x, abs[2].y); ctx.lineTo(abs[0].x, abs[0].y); ctx.stroke();
+
+      // Dibujar Arcos de Ángulo
+      drawAngleArc(ctx, abs[0], abs[1], abs[2], '#818cf8'); // Ángulo A
+      drawAngleArc(ctx, abs[1], abs[2], abs[0], '#818cf8'); // Ángulo B
+      drawAngleArc(ctx, abs[2], abs[0], abs[1], '#818cf8'); // Ángulo C
+
+      // Dibujar Vértices
+      abs.forEach(p => {
+        // Brillo exterior
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 14, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.fill();
+
+        // Punto Vértice
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        ctx.strokeStyle = '#4f46e5';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Etiqueta del Vértice
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(p.label, p.x + 12, p.y - 12);
+      });
+
+      // Actualizar UI de Estadísticas
+      if (canvas === freeCanvas) {
+        const stats = calculateTriangleData(points, w, h);
+        updateUIStats(stats);
+      }
+    }
+
+    function drawAngleArc(ctx, vertex, p1, p2, color) {
+      const angle1 = Math.atan2(p1.y - vertex.y, p1.x - vertex.x);
+      const angle2 = Math.atan2(p2.y - vertex.y, p2.x - vertex.x);
+
+      ctx.beginPath();
+      ctx.arc(vertex.x, vertex.y, 25, angle1, angle2);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    function updateUIStats(stats) {
+      document.getElementById('val-side-c').textContent = stats.sideC.toFixed(2);
+      document.getElementById('val-side-a').textContent = stats.sideA.toFixed(2);
+      document.getElementById('val-side-b').textContent = stats.sideB.toFixed(2);
+
+      document.getElementById('val-angle-a').textContent = Math.round(stats.angleA) + '°';
+      document.getElementById('val-angle-b').textContent = Math.round(stats.angleB) + '°';
+      document.getElementById('val-angle-c').textContent = Math.round(stats.angleC) + '°';
+
+      const sum = Math.round(stats.angleA + stats.angleB + stats.angleC);
+      document.getElementById('val-angle-sum').textContent = sum + '°';
+
+      document.getElementById('val-perimeter').textContent = stats.perimeter.toFixed(2) + ' cm';
+      document.getElementById('val-area').textContent = stats.area.toFixed(2) + ' cm²';
+
+      document.getElementById('badge-side-type').textContent = stats.sideType;
+      document.getElementById('badge-angle-type').textContent = stats.angleType;
+    }
+
+    // Interacción de Arrastre (Mouse & Touch)
+    function setupDrag(canvas, points) {
+      let activePoint = null;
+
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: (clientX - rect.left) / rect.width,
+          y: (clientY - rect.top) / rect.height
+        };
+      }
+
+      function onDown(e) {
+        const pos = getPos(e);
+        const threshold = 0.08; // Radio de captura
+        activePoint = points.find(p => Math.hypot(p.x - pos.x, p.y - pos.y) < threshold);
+      }
+
+      function onMove(e) {
+        if (!activePoint) return;
+        const pos = getPos(e);
+        activePoint.x = Math.max(0.05, Math.min(0.95, pos.x));
+        activePoint.y = Math.max(0.05, Math.min(0.95, pos.y));
+        const ctx = canvas.getContext('2d');
+        drawTriangle(canvas, ctx, points);
+      }
+
+      function onUp() {
+        activePoint = null;
+      }
+
+      canvas.addEventListener('mousedown', onDown);
+      canvas.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+
+      canvas.addEventListener('touchstart', onDown, { passive: true });
+      canvas.addEventListener('touchmove', onMove, { passive: true });
+      window.addEventListener('touchend', onUp);
+    }
+
+    setupDrag(freeCanvas, freePoints);
+    setupDrag(challengeCanvas, challengePoints);
+
+    // Controles del Canvas Libre
+    document.getElementById('btn-grid-toggle').addEventListener('click', () => {
+      showGrid = !showGrid;
+      drawTriangle(freeCanvas, freeCtx, freePoints);
+    });
+
+    document.getElementById('btn-reset-points').addEventListener('click', () => {
+      freePoints[0] = { x: 0.3, y: 0.7, label: 'A' };
+      freePoints[1] = { x: 0.7, y: 0.7, label: 'B' };
+      freePoints[2] = { x: 0.4, y: 0.25, label: 'C' };
+      drawTriangle(freeCanvas, freeCtx, freePoints);
+    });
+
+    // Presets Teóricos Directos
+    window.loadPreset = function(type) {
+      switchSection('canvas');
+      if (type === 'equilateral') {
+        freePoints[0] = { x: 0.3, y: 0.75, label: 'A' };
+        freePoints[1] = { x: 0.7, y: 0.75, label: 'B' };
+        freePoints[2] = { x: 0.5, y: 0.403, label: 'C' };
+      } else if (type === 'isosceles') {
+        freePoints[0] = { x: 0.3, y: 0.75, label: 'A' };
+        freePoints[1] = { x: 0.7, y: 0.75, label: 'B' };
+        freePoints[2] = { x: 0.5, y: 0.25, label: 'C' };
+      } else if (type === 'scalene') {
+        freePoints[0] = { x: 0.2, y: 0.75, label: 'A' };
+        freePoints[1] = { x: 0.8, y: 0.75, label: 'B' };
+        freePoints[2] = { x: 0.35, y: 0.3, label: 'C' };
+      } else if (type === 'right') {
+        freePoints[0] = { x: 0.3, y: 0.75, label: 'A' };
+        freePoints[1] = { x: 0.7, y: 0.75, label: 'B' };
+        freePoints[2] = { x: 0.3, y: 0.25, label: 'C' };
+      } else if (type === 'obtuse') {
+        freePoints[0] = { x: 0.15, y: 0.75, label: 'A' };
+        freePoints[1] = { x: 0.55, y: 0.75, label: 'B' };
+        freePoints[2] = { x: 0.85, y: 0.35, label: 'C' };
+      } else if (type === 'acute') {
+        freePoints[0] = { x: 0.25, y: 0.75, label: 'A' };
+        freePoints[1] = { x: 0.75, y: 0.75, label: 'B' };
+        freePoints[2] = { x: 0.5, y: 0.25, label: 'C' };
+      }
+      drawTriangle(freeCanvas, freeCtx, freePoints);
+    };
+
+    // ==========================================
+    // SECCIÓN DESAFÍOS PRÁCTICOS
+    // ==========================================
+    const challenges = [
+      {
+        id: 1,
+        title: "Construye un Triángulo Rectángulo",
+        desc: "Ajusta los vértices para que uno de sus ángulos sea exactamente un ángulo recto (90°).",
+        hint: "Mueve el vértice C verticalmente justo por encima del punto A para crear un ángulo de 90° en A.",
+        validate: (stats) => {
+          return Math.abs(stats.angleA - 90) < 3 || Math.abs(stats.angleB - 90) < 3 || Math.abs(stats.angleC - 90) < 3;
+        },
+        reqText: "Tener al menos 1 ángulo interior de 90° (±3°)"
+      },
+      {
+        id: 2,
+        title: "Construye un Triángulo Isósceles",
+        desc: "Mueve los vértices hasta conseguir que al menos dos de sus lados tengan exactamente la misma longitud.",
+        hint: "Asegúrate de que el punto C quede exactamente en la mitad del segmento horizontal AB.",
+        validate: (stats) => {
+          const tol = 0.3;
+          return Math.abs(stats.sideA - stats.sideB) < tol || Math.abs(stats.sideB - stats.sideC) < tol || Math.abs(stats.sideC - stats.sideA) < tol;
+        },
+        reqText: "Lograr que 2 lados sean iguales en longitud"
+      },
+      {
+        id: 3,
+        title: "Construye un Triángulo Obtusángulo",
+        desc: "Forma un triángulo que posea un ángulo bien abierto, mayor a 90°.",
+        hint: "Arrastra uno de los vértices hacia afuera horizontalmente para 'estirar' uno de los ángulos.",
+        validate: (stats) => {
+          return stats.angleA > 93 || stats.angleB > 93 || stats.angleC > 93;
+        },
+        reqText: "Tener 1 ángulo interior mayor a 90°"
+      },
+      {
+        id: 4,
+        title: "Construye un Triángulo Equilátero",
+        desc: "Logra que los tres lados tengan la misma longitud y todos sus ángulos midan aproximadamente 60°.",
+        hint: "Forma una pirámide equilibrada donde todos sus lados se vean visualmente idénticos.",
+        validate: (stats) => {
+          return Math.abs(stats.angleA - 60) < 5 && Math.abs(stats.angleB - 60) < 5 && Math.abs(stats.angleC - 60) < 5;
+        },
+        reqText: "3 Lados iguales y 3 ángulos cercanos a 60°"
+      },
+      {
+        id: 5,
+        title: "Construye un Triángulo Escaleno Acutángulo",
+        desc: "Construye un triángulo donde TODOS los lados sean de diferente medida Y TODOS sus ángulos sean menores de 90°.",
+        hint: "Evita ángulos rectos o muy abiertos y mantén las tres longitudes de lados claramente distintas.",
+        validate: (stats) => {
+          const statsDiff = Math.abs(stats.sideA - stats.sideB) > 0.5 && Math.abs(stats.sideB - stats.sideC) > 0.5;
+          const acute = stats.angleA < 87 && stats.angleB < 87 && stats.angleC < 87;
+          return statsDiff && acute;
+        },
+        reqText: "3 Lados desiguales + Todos los ángulos < 90°"
+      }
+    ];
+
+    let currentChallengeIdx = 0;
+    let completedChallenges = 0;
+
+    function renderChallenge() {
+      const c = challenges[currentChallengeIdx];
+      document.getElementById('challenge-num').textContent = c.id;
+      document.getElementById('challenge-title').textContent = c.title;
+      document.getElementById('challenge-desc').textContent = c.desc;
+      
+      const reqContainer = document.getElementById('challenge-requirements');
+      reqContainer.innerHTML = `
+        <div class="flex items-center gap-2 text-sm text-slate-700">
+          <i data-lucide="circle" class="w-4 h-4 text-indigo-500"></i>
+          <span>${c.reqText}</span>
+        </div>
+      `;
+      lucide.createIcons();
+
+      const feedback = document.getElementById('challenge-feedback');
+      feedback.classList.add('hidden');
+      document.getElementById('btn-next-challenge').classList.add('hidden');
+      document.getElementById('btn-next-challenge').classList.remove('flex');
+      document.getElementById('btn-check-challenge').classList.remove('hidden');
+
+      drawTriangle(challengeCanvas, challengeCtx, challengePoints);
+    }
+
+    document.getElementById('btn-check-challenge').addEventListener('click', () => {
+      const w = challengeCanvas.width / window.devicePixelRatio;
+      const h = challengeCanvas.height / window.devicePixelRatio;
+      const stats = calculateTriangleData(challengePoints, w, h);
+      const c = challenges[currentChallengeIdx];
+      
+      const feedback = document.getElementById('challenge-feedback');
+      feedback.classList.remove('hidden');
+
+      if (c.validate(stats)) {
+        feedback.className = "p-3 rounded-xl mb-4 text-sm font-medium flex items-center gap-2 bg-emerald-100 text-emerald-800 border border-emerald-200";
+        feedback.innerHTML = `<i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i> ¡Excelente! Has cumplido todos los requisitos.`;
+        completedChallenges = Math.max(completedChallenges, currentChallengeIdx + 1);
+        document.getElementById('challenge-score').textContent = `${completedChallenges} / ${challenges.length}`;
+        
+        document.getElementById('btn-check-challenge').classList.add('hidden');
+        if (currentChallengeIdx < challenges.length - 1) {
+          const nextBtn = document.getElementById('btn-next-challenge');
+          nextBtn.classList.remove('hidden');
+          nextBtn.classList.add('flex');
+        }
+      } else {
+        feedback.className = "p-3 rounded-xl mb-4 text-sm font-medium flex items-center gap-2 bg-amber-100 text-amber-800 border border-amber-200";
+        feedback.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5 text-amber-600"></i> Todavía no cumple los requisitos. ¡Sigue ajustando los vértices!`;
+      }
+      lucide.createIcons();
+    });
+
+    document.getElementById('btn-next-challenge').addEventListener('click', () => {
+      if (currentChallengeIdx < challenges.length - 1) {
+        currentChallengeIdx++;
+        renderChallenge();
+      }
+    });
+
+    document.getElementById('btn-challenge-hint').addEventListener('click', () => {
+      alert("💡 Pista: " + challenges[currentChallengeIdx].hint);
+    });
+
+    renderChallenge();
+
+    // ==========================================
+    // SECCIÓN MINI-QUIZZES
+    // ==========================================
+    const quizQuestions = [
+      {
+        question: "¿Cómo se llama el triángulo que tiene sus 3 lados con la misma medida?",
+        options: ["Isósceles", "Escaleno", "Equilátero", "Rectángulo"],
+        correct: 2,
+        explanation: "¡Correcto! El triángulo **Equilátero** tiene sus 3 lados iguales y sus 3 ángulos de 60°."
+      },
+      {
+        question: "Un triángulo tiene un ángulo interior de 110°. ¿Qué tipo de triángulo es según sus ángulos?",
+        options: ["Acutángulo", "Obtusángulo", "Rectángulo", "Isósceles"],
+        correct: 1,
+        explanation: "¡Muy bien! Al tener un ángulo mayor a 90° (en este caso 110°), se clasifica como **Obtusángulo**."
+      },
+      {
+        question: "¿Cuánto es siempre la suma de los tres ángulos internos de cualquier triángulo plano?",
+        options: ["90°", "180°", "360°", "Depende del tamaño"],
+        correct: 1,
+        explanation: "¡Exacto! Una propiedad fundamental de la geometría es que la suma de ángulos internos es siempre **180°**."
+      },
+      {
+        question: "Si un triángulo tiene dos lados de 5 cm y un lado de 8 cm, ¿cómo se clasifica según sus lados?",
+        options: ["Equilátero", "Escaleno", "Isósceles", "Acutángulo"],
+        correct: 2,
+        explanation: "¡Excelente! Al tener exactamente 2 lados iguales (5 cm y 5 cm), es un triángulo **Isósceles**."
+      }
+    ];
+
+    let quizIdx = 0;
+    let quizScore = 0;
+
+    function renderQuiz() {
+      const q = quizQuestions[quizIdx];
+      document.getElementById('quiz-step').textContent = `Pregunta ${quizIdx + 1} de ${quizQuestions.length}`;
+      document.getElementById('quiz-question').textContent = q.question;
+
+      const optsContainer = document.getElementById('quiz-options');
+      optsContainer.innerHTML = '';
+
+      const expl = document.getElementById('quiz-explanation');
+      expl.classList.add('hidden');
+
+      const nextBtn = document.getElementById('btn-quiz-next');
+      nextBtn.classList.add('hidden');
+      nextBtn.classList.remove('flex');
+
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = "w-full text-left p-3.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white font-medium text-sm transition flex items-center justify-between";
+        btn.innerHTML = `<span>${opt}</span> <i data-lucide="circle" class="w-4 h-4 opacity-50"></i>`;
+        btn.onclick = () => selectQuizOption(idx, btn);
+        optsContainer.appendChild(btn);
+      });
+      lucide.createIcons();
+    }
+
+    function selectQuizOption(selectedIdx, btnElement) {
+      const q = quizQuestions[quizIdx];
+      const opts = document.getElementById('quiz-options').children;
+
+      // Deshabilitar todos los botones
+      for (let btn of opts) {
+        btn.disabled = true;
+        btn.classList.remove('hover:bg-white/20');
+      }
+
+      const expl = document.getElementById('quiz-explanation');
+      expl.classList.remove('hidden');
+
+      if (selectedIdx === q.correct) {
+        btnElement.className = "w-full text-left p-3.5 rounded-xl bg-emerald-500/30 border border-emerald-400 text-emerald-100 font-medium text-sm flex items-center justify-between";
+        btnElement.innerHTML += `<i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>`;
+        expl.innerHTML = q.explanation;
+        quizScore++;
+        document.getElementById('quiz-score-badge').textContent = `Puntaje: ${quizScore}`;
+      } else {
+        btnElement.className = "w-full text-left p-3.5 rounded-xl bg-rose-500/30 border border-rose-400 text-rose-100 font-medium text-sm flex items-center justify-between";
+        btnElement.innerHTML += `<i data-lucide="x-circle" class="w-5 h-5 text-rose-400"></i>`;
+        
+        // Mostrar cuál era la correcta
+        opts[q.correct].className = "w-full text-left p-3.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-200 font-medium text-sm flex items-center justify-between";
+        expl.innerHTML = `Respuesta incorrecta. ` + q.explanation;
+      }
+
+      const nextBtn = document.getElementById('btn-quiz-next');
+      nextBtn.classList.remove('hidden');
+      nextBtn.classList.add('flex');
+      lucide.createIcons();
+    }
+
+    document.getElementById('btn-quiz-next').addEventListener('click', () => {
+      quizIdx++;
+      if (quizIdx < quizQuestions.length) {
+        renderQuiz();
+      } else {
+        document.getElementById('quiz-container').innerHTML = `
+          <div class="text-center py-8 space-y-4">
+            <div class="inline-flex p-4 bg-amber-400/20 rounded-full text-amber-300 mb-2">
+              <i data-lucide="trophy" class="w-12 h-12"></i>
+            </div>
+            <h4 class="text-2xl font-bold">¡Quiz Completado!</h4>
+            <p class="text-indigo-200 text-sm">Obtuviste un puntaje total de <strong>${quizScore} / ${quizQuestions.length}</strong>.</p>
+            <button onclick="resetQuiz()" class="px-6 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold rounded-xl text-sm transition inline-flex items-center gap-2">
+              Reintentar Quiz
+            </button>
+          </div>
+        `;
+        lucide.createIcons();
+      }
+    });
+
+    window.resetQuiz = function() {
+      quizIdx = 0;
+      quizScore = 0;
+      document.getElementById('quiz-score-badge').textContent = `Puntaje: 0`;
+      location.reload(); // Recarga simple para reiniciar estado limpio
+    };
+
+    renderQuiz();
+
+    // Redimensionado responsivo inicial
+    window.addEventListener('resize', () => {
+      resizeCanvas(freeCanvas, freeCtx, freePoints);
+      resizeCanvas(challengeCanvas, challengeCtx, challengePoints);
+    });
+
+    // Carga inicial
+    setTimeout(() => {
+      resizeCanvas(freeCanvas, freeCtx, freePoints);
+    }, 100);
+  </script>
+</body>
+</html>
